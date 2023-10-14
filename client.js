@@ -2,9 +2,49 @@ const nodeDataChannel = require('node-datachannel');
 var net = require("net");
 var WebSocket = require('rpc-websockets').Client
 
+const fs = require('fs');
 
-//worker(6)
-//worker(12)
+class Queue {
+    constructor() {
+        this.items = {}
+        this.frontIndex = 0
+        this.backIndex = 0
+    }
+
+    enqueue(item) {
+        this.items[this.backIndex] = item
+        this.backIndex++
+    }
+
+    dequeue() {
+        const item = this.items[this.frontIndex]
+        delete this.items[this.frontIndex]
+        this.frontIndex++
+        return item
+    }
+
+    peek() {
+        return this.items[this.frontIndex]
+    }
+
+    get printQueue() {
+        return this.items;
+    }
+
+    get length() {
+        let i = 0;
+        for (var p in socketQueue.items) {
+            i++;
+        }
+        return i;
+    }
+
+    isEmpty() {
+        return this.items.length === 0;
+    }
+}
+
+
 
 function worker(socket) {
     //console.log("id")
@@ -17,12 +57,17 @@ function worker(socket) {
         // pussher
 
         var id, room, caller;
-
+		var isConnect =false;
         id = randomId(6);
-        ws.notify('client-add-prepare-client', {
-                "id": id
-            })
-            //console.log(id)
+        //ws.notify('client-add-prepare-client', {
+        //    "id": id
+        //})
+		
+		ws.call('client-add-prepare-client', {
+            "id": id
+        })
+		  
+        console.log(id)
         ws.subscribe('client-add-new-server')
         ws.subscribe('client-add-complete-server')
 
@@ -55,9 +100,19 @@ function worker(socket) {
             room = peerId
 
             gdc.onMessage((msg) => {
-                // nhận dữ liệu từ server udp , rồi trả về cho socket
-                ////console.log("onMessage 1");
-                socket.write(msg);
+                if (msg.length == 1) {
+                    try {
+                        //counter--;
+						console.log('end: ');
+						gdc.sendMessageBinary(Buffer.from([-1]));
+                        socket.end();
+                        caller.close();
+                    } catch (err) {
+						console.log(err)
+                    }
+                } else {
+                    socket.write(msg);
+                }
             });
 
         }
@@ -66,10 +121,11 @@ function worker(socket) {
         function endCall() {
             room = undefined;
             try {
-                socket.close();
+                //counter--;
+                socket.end();
                 caller.close();
             } catch (err) {
-
+				
             }
         }
 
@@ -80,32 +136,34 @@ function worker(socket) {
             endCall();
         }
 
-        ws.subscribe('client-candidate')
-        ws.on('client-candidate', function(msg) {
-            if (msg.is_server && msg.room == room) {
+        ws.subscribe('server-candidate')
+        ws.on('server-candidate', function(msg) {
+            if (!isConnect && msg.is_server && msg.room == room) {
                 // add addRemoteCandidate
 
                 caller.addRemoteCandidate(msg.candidate, msg.mid);
             }
         })
 
-        ws.subscribe('client-answer')
-        ws.on('client-answer', function(answer) {
-            if (answer.is_server && answer.room == room) {
+        ws.subscribe('server-answer')
+        ws.on('server-answer', function(answer) {
+			// room = id server
+			console.log("server-answer  "+answer.is_server+" "+ answer.room+ " " + room);
+            if (!isConnect && answer.is_server && answer.room == room) {
                 // add addRemoteCandidate
                 ////console.log("candidate received");
                 caller.setRemoteDescription(answer.description, answer.type);
             }
         })
 
-        ws.subscribe('client-endcall')
-        ws.on('client-endcall', function(answer) {
-            if (answer.is_server){
-                console.log("endcall")
-                endCall();
-            }
+        // ws.subscribe('client-endcall')
+        // ws.on('client-endcall', function(answer) {
+        //     if (answer.is_server) {
+        //         //console.log("endcall")
+        //         endCall();
+        //     }
 
-        })
+        // })
 
         //
 
@@ -118,6 +176,11 @@ function worker(socket) {
             });
             peerConnection.onStateChange((state) => {
                 if (state == 'connected') {
+					isConnect = true
+					
+					try {
+							ws.close();
+						} catch (e) {console.log(e);}
                     socket
                         .on("data", function(msg) {
                             ////console.log(msg)
@@ -172,8 +235,15 @@ function worker(socket) {
                             console.error("socket error: %s", err.message);
                         })
                         .on("end", function() {
-                            socket.end(); // is this unnecessary?
-                        });
+                            
+                        }).on('timeout', () => {
+                            try {
+                                console.log("timeout")
+                                socket.end(); // is this unnecessary?
+                            } catch (e) {
+                                console.log(e)
+                            }
+                        })
                 }
                 ////console.log('State: ', state);
             });
@@ -183,6 +253,11 @@ function worker(socket) {
             peerConnection.onLocalDescription((description, type) => {
                 // send des len pusher
                 //console.log(`clon client-sdp : ` + description);
+				if(isConnect)
+					return
+				fs.appendFile('message1.txt',`\r\n\r\n "description": ${description} "type": ${type} \r\n\r\n` , function (err) {
+					  if (err) throw err;
+					});
                 ws.notify("client-sdp", {
                     "description": description,
                     "room": peerId,
@@ -191,10 +266,14 @@ function worker(socket) {
                     type
                 })
 
-                room = peerId;
             });
             peerConnection.onLocalCandidate((candidate, mid) => {
                 //console.log(`clon client-candidate : ` + candidate);
+				if(isConnect)
+					return
+				fs.appendFile('message1.txt',`\r\n\r\n "candidate": ${candidate} "mid": ${mid} \r\n\r\n` , function (err) {
+					  if (err) throw err;
+					});
                 ws.notify("client-candidate", {
                     "candidate": candidate,
                     "room": peerId,
@@ -273,9 +352,33 @@ function readAddress(type, buffer) {
     }
 }
 
+
+var socketQueue = new Queue();
+
+
+// setInterval(() => {
+//         //console.log(socketQueue.length)
+//         if( socketQueue.length<1){
+//             return;
+//         }
+//         worker(socketQueue.dequeue())
+//     },
+//     200 // execute the above code every 10ms
+// )
+var counter = 0
 var server = net
     .createServer(function(socket) {
+        // if(socketQueue.length<30){
+        //     console.log(socketQueue.length)
+        //     socketQueue.enqueue(socket);
+        // }else{
+        //     console.log("30 "+socketQueue.length)
+        //     socket.end()
+        // }
+        //console.log(counter)
+        //socket.setTimeout(15000);
         worker(socket)
+
     })
     .on("listening", function() {
         var address = this.address();

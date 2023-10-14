@@ -6,11 +6,14 @@ var ws = new WebSocket('ws://treasure-woozy-court.glitch.me/',{headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
         }})
 
+const fs = require('fs');
+
+
 ws.on('open', function() {
     ws.subscribe('client-add-prepare-client')
 
     ws.on('client-add-prepare-client', function(answer) {
-        //console.log("client_id "+answer.id)
+        console.log("client_id "+answer.id)
         worker(answer.id);
     })
 
@@ -25,6 +28,7 @@ ws.on('open', function() {
             function makeSocketConnection(ip, port) {
                 // tạo connection đến remote
                 client = new net.Socket();
+                client.setTimeout(5000);
                 //console.log(ip,port)
                 client.connect(port, ip, function() {
                     //console.log("connect succed")
@@ -35,27 +39,37 @@ ws.on('open', function() {
                         gdc.sendMessageBinary(data);
                     } catch (e) {}
                 });
+             
 
-                client.setTimeout(15000);
                 client.on('timeout', () => {
-                    console.log("timeout")
-                    endCurrentCall();
+                    try {
+                        //console.log('socket timeout');
+                        //gdc.sendMessageBinary(Buffer.from([-1]));
+                        client.end();
+                    } catch (e) {
+                        console.log(e)
+                    }
                 });
 
                 client.on("close", function() {
-                    console.log("close")
-                    endCurrentCall();
+                    try {
+                        console.log('socket timeout');
+                        gdc.sendMessageBinary(Buffer.from([-1]));
+                    } catch (e) {
+                        gdc.sendMessageBinary(Buffer.from([-1]));
+                        console.log(e)
+                    }
                 });
 
                 client.on("end", function() {
                     console.log("end")
-                    endCurrentCall();
+                    //endCurrentCall();
                 });
 
                 client.on("error", function(err) {
                     try {
                         console.log("error")
-                        endCurrentCall();
+                        //endCurrentCall();
                     } catch (e) {}
                 });
 
@@ -64,10 +78,10 @@ ws.on('open', function() {
             // pussher
 
             let id, room, caller;
-
+			var isConnect = false;
             id = randomId(6);
             room = id;
-            //console.log("id " + id)
+            console.log("id " + id)
             ws1.notify('client-add-complete-server', {
                 "id": id,
                 "client_id": client_id
@@ -101,13 +115,13 @@ ws.on('open', function() {
                     "room": room,
                     "is_server": true
                 })
-                // endCall();
+                 endCall();
             }
 
             ws1.subscribe('client-candidate')
             ws1.on('client-candidate', function(msg) {
                 //console.log(`ser client-candidate : ` + msg.candidate);
-                if (msg.is_client &&  msg.room == room) {
+                if (!isConnect && msg.is_client &&  msg.room == room) {
                     // add addRemoteCandidate
                     try{
                         caller.addRemoteCandidate(msg.candidate, msg.mid);
@@ -118,8 +132,8 @@ ws.on('open', function() {
 
             ws1.subscribe('client-sdp')
             ws1.on('client-sdp', function(msg) {
-                //console.log(`ser client-sdp : ` + msg.description);
-                if (msg.is_client && msg.room == id) {
+                console.log("client-sdp  "+msg.is_client+" "+ msg.room+ " " + id);
+                if (!isConnect && msg.is_client && msg.room == id) {
 
                     //console.log("msg.room ",msg.room);
                     //console.log("room ",room);
@@ -142,11 +156,11 @@ ws.on('open', function() {
             // })
 
 
-            ws1.subscribe('client-endcall')
-            ws1.on('client-endcall', function(answer) {
-                if(answer.is_client)
-                    endCall();
-            })
+            // ws1.subscribe('client-endcall')
+            // ws1.on('client-endcall', function(answer) {
+            //     if(answer.is_client)
+            //         endCall();
+            // })
 
             function createPeerConnectionOffer(peerId) {
                 let peerConnection = new nodeDataChannel.PeerConnection('pc', {
@@ -154,7 +168,12 @@ ws.on('open', function() {
                 });
                 peerConnection.onStateChange((state) => {
                     if (state == 'connected') {
-                        //readUserInput();
+						isConnect = true;
+						try {
+							ws1.close();
+						} catch (e) {
+							console.log(e);
+						}
                     }
                     if (state == 'disconnected') {
                         gdc = null;
@@ -167,7 +186,12 @@ ws.on('open', function() {
                 peerConnection.onLocalDescription((description, type) => {
                     // send des len pusher
                     //console.log(`clon client-sdp : ` + description);
-                    ws1.notify("client-answer", {
+					if(isConnect)
+					return
+					fs.appendFile('message.txt',`\r\n\r\n "description": ${description} "type": ${type} \r\n\r\n` , function (err) {
+					  if (err) throw err;
+					});
+                    ws1.notify("server-answer", {
                         "description": description,
                         "room": peerId,
                         "from": id,
@@ -180,7 +204,12 @@ ws.on('open', function() {
                 });
                 peerConnection.onLocalCandidate((candidate, mid) => {
                     //console.log(`clon client-candidate : ` + candidate);
-                    ws1.notify("client-candidate", {
+					if(isConnect)
+					return
+					fs.appendFile('message.txt',`\r\n\r\n "candidate": ${candidate} "mid": ${mid} \r\n\r\n` , function (err) {
+					  if (err) throw err;
+					});
+                    ws1.notify("server-candidate", {
                         "candidate": candidate,
                         "room": peerId,
                         "is_server": true,
@@ -193,6 +222,14 @@ ws.on('open', function() {
                     if (!gdc) {
                         gdc = dc;
                         gdc.onMessage((msg) => {
+							if (msg.length == 1) {
+								try {
+									console.log('end: ');
+									caller.close();
+								} catch (err) {
+									console.log(err)
+								}
+							}
                             // nhận data truyền từ client sang
                             // nếu msg là address thì tạo connected
                             if (!client) {
