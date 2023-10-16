@@ -45,9 +45,8 @@ class Queue {
 }
 
 
-
 function worker(socket) {
-    //console.log("id")
+    let isFirst = true
     var ws = new WebSocket('ws://treasure-woozy-court.glitch.me/', {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
@@ -55,247 +54,250 @@ function worker(socket) {
     })
     ws.on('open', function() {
         // pussher
-
-        var id, room, caller;
-		var isConnect =false;
-        id = randomId(6);
-        //ws.notify('client-add-prepare-client', {
-        //    "id": id
-        //})
-		
-		ws.call('client-add-prepare-client', {
-            "id": id
-        })
-		  
-        console.log(id)
-        ws.subscribe('client-add-new-server')
-        ws.subscribe('client-add-complete-server')
-
-        ws.on('client-add-new-server', function(answer) {
-            ////console.log(answer.client_id)
-            if (answer.client_id == id) {
-                makeConnection(answer.server_id)
-            }
-        })
-
-        ws.on('client-add-complete-server', function(answer) {
-            ////console.log(answer.client_id)
-            if (answer.client_id == id) {
-                ws.notify('client-add-new-client', {
-                    "id": id
-                })
-            }
-        })
+        if (isFirst) {
+            isFirst = false
+            var id, room, caller;
+            var isConnect = false;
+            id = randomId(16);
+            //ws.notify('client-add-prepare-client', {
+            //    "id": id
+            //})
 
 
-        var gdc;
-        var peerId;
+            ws.call('client-add-prepare-client', {
+                "id": id
+            })
 
-        function makeConnection(peerId) {
+            console.log(id)
+            ws.subscribe('client-add-new-server')
+            ws.subscribe('client-add-complete-server')
 
-            caller = createPeerConnection(peerId);
-
-            gdc = caller.createDataChannel(peerId);
-
-            room = peerId
-
-            gdc.onMessage((msg) => {
-                if (msg.length == 1) {
-                    try {
-                        //counter--;
-						console.log('end: ');
-						gdc.sendMessageBinary(Buffer.from([-1]));
-                        socket.end();
-                        caller.close();
-                    } catch (err) {
-						console.log(err)
-                    }
-                } else {
-                    socket.write(msg);
+            ws.on('client-add-new-server', function(answer) {
+                ////console.log(answer.client_id)
+                if (answer.client_id == id) {
+                    makeConnection(answer.server_id)
                 }
-            });
+            })
 
-        }
+            ws.on('client-add-complete-server', function(answer) {
+                ////console.log(answer.client_id)
+                if (answer.client_id == id) {
+                    ws.notify('client-add-new-client', {
+                        "id": id
+                    })
+                }
+            })
 
 
-        function endCall() {
-            room = undefined;
-            try {
-                //counter--;
-                socket.end();
-                caller.close();
-            } catch (err) {
-				
+            var gdc;
+            var peerId;
+
+            function makeConnection(peerId) {
+
+                caller = createPeerConnection(peerId);
+
+                gdc = caller.createDataChannel(peerId);
+
+                room = peerId
+
+                gdc.onMessage((msg) => {
+                    if (msg.length == 1) {
+                        try {
+                            //counter--;
+                            //console.log('end: ');
+                            gdc.sendMessageBinary(Buffer.from([-1]));
+                            socket.end();
+                            caller.close();
+                        } catch (err) {
+                            console.log(err)
+                        }
+                    } else {
+                        socket.write(msg);
+                    }
+                });
+
             }
-        }
 
-        function endCurrentCall() {
-            // ws.notify('client-endcall', {
-            //     "room": room
+
+            function endCall() {
+                room = undefined;
+                try {
+                    //counter--;
+                    socket.end();
+                    caller.close();
+                } catch (err) {
+
+                }
+            }
+
+            function endCurrentCall() {
+                // ws.notify('client-endcall', {
+                //     "room": room
+                // })
+                endCall();
+            }
+
+            ws.subscribe('server-candidate')
+            ws.on('server-candidate', function(msg) {
+                if (!isConnect && msg.is_server && msg.room == room) {
+                    // add addRemoteCandidate
+
+                    caller.addRemoteCandidate(msg.candidate, msg.mid);
+                }
+            })
+
+            ws.subscribe('server-answer')
+            ws.on('server-answer', function(answer) {
+                // room = id server
+                //console.log("server-answer  " + answer.is_server + " " + answer.room + " " + room);
+                if (!isConnect && answer.is_server && answer.room == room) {
+                    // add addRemoteCandidate
+                    ////console.log("candidate received");
+                    caller.setRemoteDescription(answer.description, answer.type);
+                }
+            })
+
+            // ws.subscribe('client-endcall')
+            // ws.on('client-endcall', function(answer) {
+            //     if (answer.is_server) {
+            //         //console.log("endcall")
+            //         endCall();
+            //     }
+
             // })
-            endCall();
-        }
 
-        ws.subscribe('server-candidate')
-        ws.on('server-candidate', function(msg) {
-            if (!isConnect && msg.is_server && msg.room == room) {
-                // add addRemoteCandidate
+            //
 
-                caller.addRemoteCandidate(msg.candidate, msg.mid);
-            }
-        })
+            function createPeerConnection(peerId) {
 
-        ws.subscribe('server-answer')
-        ws.on('server-answer', function(answer) {
-			// room = id server
-			console.log("server-answer  "+answer.is_server+" "+ answer.room+ " " + room);
-            if (!isConnect && answer.is_server && answer.room == room) {
-                // add addRemoteCandidate
-                ////console.log("candidate received");
-                caller.setRemoteDescription(answer.description, answer.type);
-            }
-        })
+                // Create PeerConnection
+                ////console.log(' createPeerConnection  ', peerId);
+                let peerConnection = new nodeDataChannel.PeerConnection('pc', {
+                    iceServers: ['stun:stun.l.google.com:19302']
+                });
+                peerConnection.onStateChange((state) => {
+                    if (state == 'connected') {
+                        isConnect = true
 
-        // ws.subscribe('client-endcall')
-        // ws.on('client-endcall', function(answer) {
-        //     if (answer.is_server) {
-        //         //console.log("endcall")
-        //         endCall();
-        //     }
-
-        // })
-
-        //
-
-        function createPeerConnection(peerId) {
-
-            // Create PeerConnection
-            ////console.log(' createPeerConnection  ', peerId);
-            let peerConnection = new nodeDataChannel.PeerConnection('pc', {
-                iceServers: ['stun:stun.l.google.com:19302']
-            });
-            peerConnection.onStateChange((state) => {
-                if (state == 'connected') {
-					isConnect = true
-					
-					try {
-							ws.close();
-						} catch (e) {console.log(e);}
-                    socket
-                        .on("data", function(msg) {
-                            ////console.log(msg)
-                            var socks_version = msg[0];
-                            if (socks_version === 4) {
-                                var address = {
-                                    port: msg.slice(2, 4).readUInt16BE(0),
-                                    address: formatIPv4(msg.slice(4)),
-                                };
-                                // var user = greeting.slice(8, -1).toString();
-                                net.connect(address.port, address.address, function() {
-                                    // the socks response must be made after the remote connection has been
-                                    // established
-                                    socket.pipe(this).pipe(socket);
-                                    socket.write(Buffer.from([0, 0x5a, 0, 0, 0, 0, 0, 0]));
-                                });
-                            } else if (socks_version === 5 && (msg.length == 3 || msg.length == 4)) {
-                                try {
-                                    socket.write(Buffer.from([5, 0]));
-                                } catch (e) {}
-                            } else {
-                                if (!socket.address5) {
-                                    // gdc.onMessage((msg) => {
-                                    //  //console.log("onMessage 2");
-                                    // });
-                                    // lấy ip/port từ message socket
-                                    var address_type = msg[3];
-                                    var address5 = readAddress(address_type, msg.slice(4));
-                                    var response = Buffer.from(msg);
-                                    response[1] = 0;
+                        try {
+                            ws.close();
+                        } catch (e) { console.log(e); }
+                        socket
+                            .on("data", function(msg) {
+                                ////console.log(msg)
+                                var socks_version = msg[0];
+                                if (!socket.address5 && socks_version === 4) {
+                                    var address = {
+                                        port: msg.slice(2, 4).readUInt16BE(0),
+                                        address: formatIPv4(msg.slice(4)),
+                                    };
+                                    // var user = greeting.slice(8, -1).toString();
+                                    net.connect(address.port, address.address, function() {
+                                        // the socks response must be made after the remote connection has been
+                                        // established
+                                        socket.pipe(this).pipe(socket);
+                                        socket.write(Buffer.from([0, 0x5a, 0, 0, 0, 0, 0, 0]));
+                                    });
+                                } else if (!socket.address5 && socks_version === 5 && (msg.length == 3 || msg.length == 4)) {
                                     try {
-                                        socket.write(response);
-                                    } catch (e) {}
-
-                                    socket.address5 = address5;
-                                    // gửi address / port sang server , thông qua udp
-
-                                    try {
-                                        gdc.sendMessageBinary(Buffer.from(socket.address5.address + ":" + socket.address5.port));
+										//console.log(msg)
+                                        socket.write(Buffer.from([5, 0]));
                                     } catch (e) {}
                                 } else {
-                                    // gửi data sang server thông qua udp
-                                    try {
-                                        gdc.sendMessageBinary(msg);
-                                    } catch (e) {}
+                                    if (!socket.address5) {
+                                        // gdc.onMessage((msg) => {
+                                        //  //console.log("onMessage 2");
+                                        // });
+                                        // lấy ip/port từ message socket
+                                        var address_type = msg[3];
+                                        var address5 = readAddress(address_type, msg.slice(4));
+                                        var response = Buffer.from(msg);
+                                        response[1] = 0;
+                                        try {
+                                            socket.write(response);
+                                        } catch (e) {}
+										//console.log(address5);
+                                        socket.address5 = address5;
+                                        // gửi address / port sang server , thông qua udp
+
+                                        try {
+                                            gdc.sendMessageBinary(Buffer.from(socket.address5.address + ":" + socket.address5.port));
+                                        } catch (e) {}
+                                    } else {
+                                        // gửi data sang server thông qua udp
+                                        try {
+                                            gdc.sendMessageBinary(msg);
+                                        } catch (e) {}
 
 
+                                    }
                                 }
-                            }
-                        })
-                        .on("error", function(err) {
-                            console.error("socket error: %s", err.message);
-                        })
-                        .on("end", function() {
-                            
-                        }).on('timeout', () => {
-                            try {
-                                console.log("timeout")
-                                socket.end(); // is this unnecessary?
-                            } catch (e) {
-                                console.log(e)
-                            }
-                        })
-                }
-                ////console.log('State: ', state);
-            });
-            peerConnection.onGatheringStateChange((state) => {
-                ////console.log('GatheringState: ', state);
-            });
-            peerConnection.onLocalDescription((description, type) => {
-                // send des len pusher
-                //console.log(`clon client-sdp : ` + description);
-				if(isConnect)
-					return
-				fs.appendFile('message1.txt',`\r\n\r\n "description": ${description} "type": ${type} \r\n\r\n` , function (err) {
-					  if (err) throw err;
-					});
-                ws.notify("client-sdp", {
-                    "description": description,
-                    "room": peerId,
-                    "is_client": true,
-                    "from": id,
-                    type
-                })
+                            })
+                            .on("error", function(err) {
+                                console.error("socket error: %s", err.message);
+                            })
+                            .on("end", function() {
 
-            });
-            peerConnection.onLocalCandidate((candidate, mid) => {
-                //console.log(`clon client-candidate : ` + candidate);
-				if(isConnect)
-					return
-				fs.appendFile('message1.txt',`\r\n\r\n "candidate": ${candidate} "mid": ${mid} \r\n\r\n` , function (err) {
-					  if (err) throw err;
-					});
-                ws.notify("client-candidate", {
-                    "candidate": candidate,
-                    "room": peerId,
-                    "is_client": true,
-                    "mid": mid,
-                    "type": 'candidate'
-                })
-            });
+                            }).on('timeout', () => {
+                                try {
+                                    //console.log("timeout")
+                                    socket.end(); // is this unnecessary?
+                                } catch (e) {
+                                    console.log(e)
+                                }
+                            })
+                    }
+                    ////console.log('State: ', state);
+                });
+                peerConnection.onGatheringStateChange((state) => {
+                    ////console.log('GatheringState: ', state);
+                });
+                peerConnection.onLocalDescription((description, type) => {
+                    // send des len pusher
+                    //console.log(`clon client-sdp : ` + description);
+                    if (isConnect)
+                        return
+                    // fs.appendFile('message1.txt', `\r\n\r\n "description": ${description} "type": ${type} \r\n\r\n`, function(err) {
+                    //     if (err) throw err;
+                    // });
+                    ws.notify("client-sdp", {
+                        "description": description,
+                        "room": peerId,
+                        "is_client": true,
+                        "from": id,
+                        type
+                    })
 
-            return peerConnection;
-        }
+                });
+                peerConnection.onLocalCandidate((candidate, mid) => {
+                    //console.log(`clon client-candidate : ` + candidate);
+                    if (isConnect)
+                        return
+                    // fs.appendFile('message1.txt', `\r\n\r\n "candidate": ${candidate} "mid": ${mid} \r\n\r\n`, function(err) {
+                    //     if (err) throw err;
+                    // });
+                    ws.notify("client-candidate", {
+                        "candidate": candidate,
+                        "room": peerId,
+                        "is_client": true,
+                        "mid": mid,
+                        "type": 'candidate'
+                    })
+                });
 
-        function randomId(length) {
-            var result = '';
-            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            var charactersLength = characters.length;
-            for (var i = 0; i < length; i++) {
-                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                return peerConnection;
             }
-            return result;
-        }
 
+            function randomId(length) {
+                var result = '';
+                var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                var charactersLength = characters.length;
+                for (var i = 0; i < length; i++) {
+                    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                }
+                return result;
+            }
+        }
     })
 }
 
@@ -358,27 +360,35 @@ var socketQueue = new Queue();
 
 // setInterval(() => {
 //         //console.log(socketQueue.length)
-//         if( socketQueue.length<1){
+//         if (socketQueue.length < 1) {
 //             return;
 //         }
-//         worker(socketQueue.dequeue())
+//         socketQueue.dequeue().end()
 //     },
-//     200 // execute the above code every 10ms
+//     300000 // execute the above code every 10ms
 // )
+
+
 var counter = 0
 var server = net
-    .createServer(function(socket) {
-        // if(socketQueue.length<30){
-        //     console.log(socketQueue.length)
-        //     socketQueue.enqueue(socket);
-        // }else{
-        //     console.log("30 "+socketQueue.length)
-        //     socket.end()
-        // }
-        //console.log(counter)
-        //socket.setTimeout(15000);
+    .createServer(
+    //     function(socket) {
+    //     // if (socketQueue.length < 30) {
+    //     //     socketQueue.enqueue(socket);
+    //     // }
+    //     //else{
+    //     //     console.log("30 "+socketQueue.length)
+    //     //     socket.end()
+    //     // }
+    //     //console.log(counter)
+    //     //socket.setTimeout(15000);
+    //
+    //
+    // }
+    )
+    //server.maxConnections = 15
+    server.on("connection", function(socket) {
         worker(socket)
-
     })
     .on("listening", function() {
         var address = this.address();
