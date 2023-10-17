@@ -3,6 +3,8 @@ var net = require("net");
 var WebSocket = require('rpc-websockets').Client
 const { Worker } = require("worker_threads");
 const WebSocket1 = require('ws');
+// import * as common from './common.js';
+var common = require('./common.js');
 
 //const fs = require('fs');
 
@@ -46,16 +48,25 @@ class Queue {
     }
 }
 
+
+function randomId(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+
 var gdcGlobal = null;
 
 function worker1() {
     console.log("open1")
     let isFirst = true
-    var ws = new WebSocket('ws://treasure-woozy-court.glitch.me/', {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-        }
-    })
+    var id, room, caller;
+    var isConnect = false;
+    id = randomId(16);
 
     var ws1 = new WebSocket1('ws://patch-nasal-cast.glitch.me/', {
         headers: {
@@ -65,14 +76,16 @@ function worker1() {
 
     ws1.on('open', () => {
         console.log("open2")
+        var ws = new WebSocket('ws://treasure-woozy-court.glitch.me/', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+            }
+        })
         ws.on('open', function() {
             console.log("open3")
             // pussher
             if (isFirst) {
                 isFirst = false
-                var id, room, caller;
-                var isConnect = false;
-                id = randomId(16);
 
                 var peerId;
                 //ws.notify('client-add-prepare-client', {
@@ -126,18 +139,18 @@ function worker1() {
                     }
 
 
-                    function endCall() {
-                        room = undefined;
-                        try {
-                            caller.close();
-                        } catch (err) {
+                    // function endCall() {
+                    //     room = undefined;
+                    //     try {
+                    //         caller.close();
+                    //     } catch (err) {
 
-                        }
-                    }
+                    //     }
+                    // }
 
-                    function endCurrentCall() {
-                        endCall();
-                    }
+                    // function endCurrentCall() {
+                    //     endCall();
+                    // }
 
                     ws.subscribe('server-candidate')
                     ws.on('server-candidate', function(msg) {
@@ -161,7 +174,7 @@ function worker1() {
                         peerConnection.onStateChange((state) => {
                             if (state == 'connected') {
                                 isConnect = true
-
+                                console.log(state)
                                 try {
                                     ws.close();
                                 } catch (e) {
@@ -172,8 +185,7 @@ function worker1() {
                         });
                         peerConnection.onGatheringStateChange((state) => {});
                         peerConnection.onLocalDescription((description, type) => {
-                            if (isConnect)
-                                return
+
                             ws.notify("client-sdp", {
                                 "description": description,
                                 "room": peerId,
@@ -184,8 +196,6 @@ function worker1() {
 
                         });
                         peerConnection.onLocalCandidate((candidate, mid) => {
-                            if (isConnect)
-                                return
 
                             ws.notify("client-candidate", {
                                 "candidate": candidate,
@@ -201,22 +211,9 @@ function worker1() {
 
                 })
 
-                function randomId(length) {
-                    var result = '';
-                    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                    var charactersLength = characters.length;
-                    for (var i = 0; i < length; i++) {
-                        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-                    }
-                    return result;
-                }
-
-
-
             }
         })
     });
-
 }
 
 worker1()
@@ -234,7 +231,7 @@ function createWorker(socket) {
 
 function worker(socket) {
     let isFirst = true
-    var ws = new WebSocket('ws://localhost:3000/', {
+    var ws = new WebSocket1('ws://localhost:3000/', {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
         }
@@ -257,7 +254,7 @@ function worker(socket) {
     var peerId;
 
     function publish(destination, content) {
-        ws1.send(JSON.stringify({
+        ws.send(JSON.stringify({
             type: 'publish',
             destination: destination,
             content: content
@@ -265,7 +262,7 @@ function worker(socket) {
     }
 
     function subscribe(destination) {
-        ws1.send(JSON.stringify({
+        ws.send(JSON.stringify({
             type: 'subscribe',
             destination: destination
         }));
@@ -316,6 +313,8 @@ function worker(socket) {
 
     }
 
+    var candidates = []
+    var descriptions = {}
     function createPeerConnection(peerId) {
 
         // Create PeerConnection
@@ -397,30 +396,68 @@ function worker(socket) {
                         }
                     })
             }
-            ////console.log('State: ', state);
+            console.log('State: ', state);
         });
         peerConnection.onGatheringStateChange((state) => {
-            ////console.log('GatheringState: ', state);
+            console.log('GatheringState: ', state);
+            if(state == "complete"){
+					let desc = peerConnection.localDescription();
+                    // let temp = descriptions
+                    // for(let i=0 ; i < candidates.length ; i++){
+                    //     temp = temp + candidates[i]+"\r\n"
+                    // }
+                    //  console.log(temp)
+                    // let object = Object.assign(
+                    //   {},
+                    //   { sdp: temp },
+                    //   { type:  "offer"}
+                    // );
+                    publish("client-sdp", {
+                        "description": JSON.stringify(desc),
+                        "room": peerId,
+                        "is_client": true,
+                        "from": id,
+                        "type": "offer"
+                    })
+            }
+        
         });
-        peerConnection.onLocalDescription((description, type) => {
-            publish("client-sdp", {
-                "description": description,
-                "room": peerId,
-                "is_client": true,
-                "from": id,
-                type
-            })
-
-        });
-        peerConnection.onLocalCandidate((candidate, mid) => {
-            publish("client-candidate", {
-                "candidate": candidate,
-                "room": peerId,
-                "is_client": true,
-                "mid": mid,
-                "type": 'candidate'
-            })
-        });
+        // common.waitForAllICE(peerConnection)
+        // peerConnection.onLocalDescription((description, type) => {
+        //     descriptions = description
+        // });
+        // try { 
+        //     // peerConnection.setLocalDescription(peerConnection.createOffer())
+            
+        //     const localOfferWithICECandidates = peerConnection.localDescription
+        //     // let object = Object.assign(
+        //     //   {},
+        //     //   { sdp: description },
+        //     //   { type:  type}
+        //     // );
+        //     publish("client-sdp", {
+        //         "description": localOfferWithICECandidates,
+        //         "room": peerId,
+        //         "is_client": true,
+        //         "from": id,
+        //         type
+        //     })
+        // } catch (err) {
+        // console.log(err)
+        // } finally {
+            
+        // }
+        
+        // peerConnection.onLocalCandidate((candidate, mid) => {
+            // candidates.push(candidate)
+            // publish("client-candidate", {
+            //     "candidate": candidate,
+            //     "room": peerId,
+            //     "is_client": true,
+            //     "mid": mid,
+            //     "type": 'candidate'
+            // })
+        // });
 
         return peerConnection;
     }
@@ -459,9 +496,8 @@ function worker(socket) {
         }
     })
 
-    ws1.on('message', (responseData) => {
-        var parsed = JSON.parse(responseData.data);
-
+    ws.on('message', (responseData) => {
+        var parsed = JSON.parse(responseData);
 
         if (parsed.match.includes("client-add-new-server")) {
             ////console.log(answer.client_id)

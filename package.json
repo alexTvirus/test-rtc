@@ -10,9 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.6.0",
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
-    "node-datachannel": "^0.5.0-dev",
+    "node-datachannel": "0.4.2",
     "pusher": "^1.5.1",
     "pusher-js": "^8.3.0",
     "rpc-websockets": "^7.6.0",
