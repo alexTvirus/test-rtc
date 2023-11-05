@@ -5,8 +5,13 @@ const { Worker } = require("worker_threads");
 const WebSocket1 = require('ws');
 // import * as common from './common.js';
 var common = require('./common.js');
-
+const readline = require("readline");
 //const fs = require('fs');
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+});
 
 class Queue {
     constructor() {
@@ -296,6 +301,7 @@ function worker(socket) {
         room = peerId
 
         gdc.onMessage((msg) => {
+			console.log(msg)
             if (msg.length == 1) {
                 try {
                     //counter--;
@@ -307,21 +313,18 @@ function worker(socket) {
                     console.log(err)
                 }
             } else {
+				
                 socket.write(msg);
             }
         });
 
     }
 
-    var candidates = []
-    var descriptions = {}
     function createPeerConnection(peerId) {
 
         // Create PeerConnection
         ////console.log(' createPeerConnection  ', peerId);
-        let peerConnection = new nodeDataChannel.PeerConnection('pc', {
-            iceServers: ['stun:stun.l.google.com:19302']
-        });
+        let peerConnection = new nodeDataChannel.PeerConnection('pc', { iceServers: [] });
         peerConnection.onStateChange((state) => {
             if (state == 'connected') {
                 isConnect = true
@@ -370,11 +373,14 @@ function worker(socket) {
                                 // gửi address / port sang server , thông qua udp
 
                                 try {
+									console.log("send 1")
+									
                                     gdc.sendMessageBinary(Buffer.from(socket.address5.address + ":" + socket.address5.port));
                                 } catch (e) {}
                             } else {
                                 // gửi data sang server thông qua udp
                                 try {
+									console.log("send 2")
                                     gdc.sendMessageBinary(msg);
                                 } catch (e) {}
 
@@ -402,6 +408,7 @@ function worker(socket) {
             console.log('GatheringState: ', state);
             if(state == "complete"){
 					let desc = peerConnection.localDescription();
+                    // desc = JSON.parse();
                     // let temp = descriptions
                     // for(let i=0 ; i < candidates.length ; i++){
                     //     temp = temp + candidates[i]+"\r\n"
@@ -418,7 +425,22 @@ function worker(socket) {
                         "is_client": true,
                         "from": id,
                         "type": "offer"
-                    })
+                        })
+                    // rl.question('## Please copy/paste the answer provided by the browser: \n', (sdp) => {
+                    //     let sdpObj = JSON.parse(sdp);
+                    //     publish("client-sdp", {
+                    //     "description": JSON.stringify(sdpObj),
+                    //     "room": peerId,
+                    //     "is_client": true,
+                    //     "from": id,
+                    //     "type": "offer"
+                    //     })
+
+                    //     rl.close();
+                    // });
+
+
+                    
             }
         
         });
@@ -527,9 +549,11 @@ function worker(socket) {
         if (parsed.match.includes("server-answer")) {
             // room = id server
             //console.log("server-answer  " + answer.is_server + " " + answer.room + " " + room);
-            if (!isConnect && parsed.content.is_server && parsed.content.room == room) {
+            if (parsed.content.is_server && parsed.content.room == room) {
                 // add addRemoteCandidate
-                ////console.log("candidate received");
+                console.log("server-answer");
+				console.log(JSON.stringify(parsed.content.type));
+                console.log(JSON.stringify(parsed.content.description));
                 caller.setRemoteDescription(parsed.content.description, parsed.content.type);
             }
 
