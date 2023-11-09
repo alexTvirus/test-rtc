@@ -291,17 +291,39 @@ function worker(socket) {
         endCall();
     }
 
+    var client_response;
+
+	function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+	
+	let guid = () => {
+			let s4 = () => {
+				return Math.floor((1 + Math.random()) * 0x10000)
+					.toString(16)
+					.substring(1);
+			}
+			//return id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
+			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+		}
 
     function makeConnection(peerId) {
 
         caller = createPeerConnection(peerId);
 
-        gdc = caller.createDataChannel(peerId);
+        gdc = caller.createDataChannel(guid(),{
+            // negotiated:true,
+            id: getRandomInt(0,999),
+            portRangeBegin: 5000,
+            portRangeEnd: 9999,
+        });
 
         room = peerId
 
         gdc.onMessage((msg) => {
-			console.log(msg)
+			// console.log(msg)
             if (msg.length == 1) {
                 try {
                     //counter--;
@@ -312,7 +334,11 @@ function worker(socket) {
                 } catch (err) {
                     console.log(err)
                 }
-            } else {
+            } else if(msg.length == 2 && msg[0] == 45){
+                socket.write(client_response);   
+            }
+
+            else {
 				
                 socket.write(msg);
             }
@@ -365,22 +391,23 @@ function worker(socket) {
                                 var address5 = readAddress(address_type, msg.slice(4));
                                 var response = Buffer.from(msg);
                                 response[1] = 0;
-                                try {
-                                    socket.write(response);
-                                } catch (e) {}
+                                client_response = response
+                                // try {
+                                //     socket.write(response);
+                                // } catch (e) {}
                                 //console.log(address5);
                                 socket.address5 = address5;
                                 // gửi address / port sang server , thông qua udp
 
                                 try {
-									console.log("send 1")
+									// console.log("send 1")
 									
-                                    gdc.sendMessageBinary(Buffer.from(socket.address5.address + ":" + socket.address5.port));
+                                    gdc.sendMessageBinary(Buffer.from("-1"+socket.address5.address + ":" + socket.address5.port));
                                 } catch (e) {}
                             } else {
                                 // gửi data sang server thông qua udp
                                 try {
-									console.log("send 2")
+									// console.log("send 2")
                                     gdc.sendMessageBinary(msg);
                                 } catch (e) {}
 
@@ -402,10 +429,10 @@ function worker(socket) {
                         }
                     })
             }
-            console.log('State: ', state);
+            // console.log('State: ', state);
         });
         peerConnection.onGatheringStateChange((state) => {
-            console.log('GatheringState: ', state);
+            // console.log('GatheringState: ', state);
             if(state == "complete"){
 					let desc = peerConnection.localDescription();
                     // desc = JSON.parse();
@@ -444,42 +471,6 @@ function worker(socket) {
             }
         
         });
-        // common.waitForAllICE(peerConnection)
-        // peerConnection.onLocalDescription((description, type) => {
-        //     descriptions = description
-        // });
-        // try { 
-        //     // peerConnection.setLocalDescription(peerConnection.createOffer())
-            
-        //     const localOfferWithICECandidates = peerConnection.localDescription
-        //     // let object = Object.assign(
-        //     //   {},
-        //     //   { sdp: description },
-        //     //   { type:  type}
-        //     // );
-        //     publish("client-sdp", {
-        //         "description": localOfferWithICECandidates,
-        //         "room": peerId,
-        //         "is_client": true,
-        //         "from": id,
-        //         type
-        //     })
-        // } catch (err) {
-        // console.log(err)
-        // } finally {
-            
-        // }
-        
-        // peerConnection.onLocalCandidate((candidate, mid) => {
-            // candidates.push(candidate)
-            // publish("client-candidate", {
-            //     "candidate": candidate,
-            //     "room": peerId,
-            //     "is_client": true,
-            //     "mid": mid,
-            //     "type": 'candidate'
-            // })
-        // });
 
         return peerConnection;
     }
@@ -551,9 +542,9 @@ function worker(socket) {
             //console.log("server-answer  " + answer.is_server + " " + answer.room + " " + room);
             if (parsed.content.is_server && parsed.content.room == room) {
                 // add addRemoteCandidate
-                console.log("server-answer");
-				console.log(JSON.stringify(parsed.content.type));
-                console.log(JSON.stringify(parsed.content.description));
+                // console.log("server-answer");
+				// console.log(JSON.stringify(parsed.content.type));
+                // console.log(JSON.stringify(parsed.content.description));
                 caller.setRemoteDescription(parsed.content.description, parsed.content.type);
             }
 
