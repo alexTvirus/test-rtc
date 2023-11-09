@@ -7,6 +7,7 @@ const WebSocket1 = require('ws');
 var common = require('./common.js');
 const readline = require("readline");
 //const fs = require('fs');
+const axios = require('axios');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -80,148 +81,11 @@ function worker1() {
     })
 
     ws1.on('open', () => {
-        console.log("open2")
-        var ws = new WebSocket('ws://treasure-woozy-court.glitch.me/', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-            }
-        })
-        ws.on('open', function() {
-            console.log("open3")
-            // pussher
-            if (isFirst) {
-                isFirst = false
-
-                var peerId;
-                //ws.notify('client-add-prepare-client', {
-                //    "id": id
-                //})
-
-                ws1.send(JSON.stringify({
-                    method: 'client',
-                    id: id
-                }));
-
-                ws1.on('message', (msg) => {
-                    try {
-                        ws1.close()
-                        console.log(id)
-                    } catch (e) {
-                        console.log(e)
-                    }
-                    ws.subscribe('client-add-new-server')
-                    ws.subscribe('client-add-complete-server')
-
-                    ws.on('client-add-new-server', function(answer) {
-                        if (answer.client_id == id) {
-                            makeConnection(answer.server_id)
-                        }
-                    })
-
-                    ws.on('client-add-complete-server', function(answer) {
-
-                        ////console.log(answer.client_id)
-                        if (answer.client_id == id) {
-                            ws.notify('client-add-new-client', {
-                                "id": id
-                            })
-                        }
-                    })
-
-
-                    function makeConnection(peerId) {
-
-                        caller = createPeerConnection(peerId);
-
-                        gdcGlobal = caller.createDataChannel(peerId);
-
-                        room = peerId
-
-                        gdcGlobal.onMessage((msg) => {
-
-                        });
-
-                    }
-
-
-                    // function endCall() {
-                    //     room = undefined;
-                    //     try {
-                    //         caller.close();
-                    //     } catch (err) {
-
-                    //     }
-                    // }
-
-                    // function endCurrentCall() {
-                    //     endCall();
-                    // }
-
-                    ws.subscribe('server-candidate')
-                    ws.on('server-candidate', function(msg) {
-                        if (!isConnect && msg.is_server && msg.room == room) {
-                            caller.addRemoteCandidate(msg.candidate, msg.mid);
-                        }
-                    })
-
-                    ws.subscribe('server-answer')
-                    ws.on('server-answer', function(answer) {
-                        if (!isConnect && answer.is_server && answer.room == room) {
-                            caller.setRemoteDescription(answer.description, answer.type);
-                        }
-                    })
-
-
-                    function createPeerConnection(peerId) {
-                        let peerConnection = new nodeDataChannel.PeerConnection('pc', {
-                            iceServers: ['stun:stun.l.google.com:19302']
-                        });
-                        peerConnection.onStateChange((state) => {
-                            if (state == 'connected') {
-                                isConnect = true
-                                console.log(state)
-                                try {
-                                    ws.close();
-                                } catch (e) {
-                                    console.log(e);
-                                }
-
-                            }
-                        });
-                        peerConnection.onGatheringStateChange((state) => {});
-                        peerConnection.onLocalDescription((description, type) => {
-
-                            ws.notify("client-sdp", {
-                                "description": description,
-                                "room": peerId,
-                                "is_client": true,
-                                "from": id,
-                                type
-                            })
-
-                        });
-                        peerConnection.onLocalCandidate((candidate, mid) => {
-
-                            ws.notify("client-candidate", {
-                                "candidate": candidate,
-                                "room": peerId,
-                                "is_client": true,
-                                "mid": mid,
-                                "type": 'candidate'
-                            })
-                        });
-
-                        return peerConnection;
-                    }
-
-                })
-
-            }
-        })
+        gdcGlobal = ws1
     });
 }
 
-worker1()
+
 
 //--------------------------------
 
@@ -328,7 +192,7 @@ function worker(socket) {
                 try {
                     //counter--;
                     //console.log('end: ');
-                    gdc.sendMessageBinary(Buffer.from([-1]));
+                    gdc.sendMessageBinary(Buffer.from([0]));
                     socket.end();
                     caller.close();
                 } catch (err) {
@@ -422,7 +286,8 @@ function worker(socket) {
 
                     }).on('timeout', () => {
                         try {
-                            //console.log("timeout")
+                            console.log("timeout")
+                            gdc.sendMessageBinary(Buffer.from([0]));
                             socket.end(); // is this unnecessary?
                         } catch (e) {
                             console.log(e)
@@ -485,9 +350,8 @@ function worker(socket) {
             //    "id": id
             //})
 
-            gdcGlobal.sendMessageBinary(Buffer.from(JSON.stringify({
-                id: id
-            })));
+            axios.get(`http://localhost:8000/id/${id}`)
+
             console.log("id ", id)
 
             subscribe('client-add-new-server')
@@ -625,7 +489,7 @@ server.on("connection", function(socket) {
         //     socket.end()
         // }
         //console.log(counter)
-        //socket.setTimeout(15000);
+        socket.setTimeout(15000);
         worker(socket)
     })
     .
