@@ -30,37 +30,37 @@
                 //             );
                 //     arrayData[count] = gdc2
                 //         gdc2.onopen  = (event) => {
-                //              if(gdc2.readyState  == "open")   
+                //              if(gdc2.readyState  == "open")
                 //                 gdc2.send("ffwefefwef"+count);
                 //         }
 
                 //         gdc2.onmessage = (event) => {
                 //             console.log('onmessage: ', event.data);
-                            
+
                 //         }
-                
+
 
                 // },5000)
 
                    let gdc2 = rtc.createDataChannel("kikik"+count,{
                                 negotiated:true,
-                                id: 1023}
+                                id: 123}
                                 );
                         arrayData[count] = gdc2
                             gdc2.onopen  = (event) => {
-                                 if(gdc2.readyState  == "open")   
+                                 if(gdc2.readyState  == "open")
                                     gdc2.send("ffwefefwef"+1024);
                             }
 
                             gdc2.onmessage = (event) => {
                                 console.log('onmessage: ', event.data);
-                                
+
                             }
             }
         }
 
        const myElement = document.getElementById("btn_id");
-     
+
      myElement.addEventListener('click',   () => {
         let gdc2 = rtc.createDataChannel("kikik"+count,{
                                 negotiated:true,
@@ -68,20 +68,20 @@
                                 );
                         arrayData[count] = gdc2
                             gdc2.onopen  = (event) => {
-                                 if(gdc2.readyState  == "open")   
+                                 if(gdc2.readyState  == "open")
                                     gdc2.send("ffwefefwef"+1024);
                             }
 
                             gdc2.onmessage = (event) => {
                                 console.log('onmessage: ', event.data);
-                                
+
                             }
 
 
         // input = document.getElementById("id_data");
         // let it = arrayData[input.value]
         // it.send("ffwefefwef "+input.value);
-    })        
+    })
 
 
     rtc.onicegatheringstatechange = (state) => {
@@ -119,10 +119,10 @@
     document.querySelector('button').addEventListener('click',   () => {
 
         let offer = JSON.parse(document.querySelector('textarea').value);
-        
+
          rtc.setRemoteDescription(offer);
 
-          
+
         // let media = await navigator.mediaDevices.getUserMedia({
         //     video: {
         //         width: 1280,

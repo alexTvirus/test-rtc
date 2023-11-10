@@ -651,30 +651,30 @@ function worker(socket,id_peer) {
 }
 //---------------
 
-// var arrayIds = {}
-//
-// function setUp(){
-//     for(let i=1 ; i < 1022 ; i++){
-//         arrayIds[i] = true
-//     }
-// }
-//
-// setUp()
-//
-// function controller(socket){
-//     let id = -1
-//     for (var key in arrayIds) {
-//         if (arrayIds[key]){
-//             id = key
-//             arrayIds[key] = false
-//             break;
-//         }
-//     }
-//     if (id == -1)
-//         socket.end()
-//     else
-//         worker(socket,id)
-// }
+var arrayIds = {}
+
+function setUp(){
+    for(let i=1 ; i < 1022 ; i++){
+        arrayIds[i] = true
+    }
+}
+
+setUp()
+
+function controller(socket){
+    let id = -1
+    for (var key in arrayIds) {
+        if (arrayIds[key]){
+            id = key
+            arrayIds[key] = false
+            break;
+        }
+    }
+    if (id == -1)
+        socket.end()
+    else
+        worker(socket,id)
+}
 
 //--------------------------------
 

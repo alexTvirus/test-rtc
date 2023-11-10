@@ -24,9 +24,38 @@ function getRandomInt(min, max) {
     }
 
 var count = 1019
+var gdc2
+
 peerConnection.onStateChange((state) => {
     console.log('State: ', state);
     if(state == "connected"){
+
+              gdc2 = peerConnection.createDataChannel("peerIdx1",{
+                    negotiated:true,
+                    id: 123,
+                    portRangeBegin: 6000,
+                    portRangeEnd: 9999,
+                    }
+                    );
+
+                gdc2.onOpen((event)=>{
+                
+                try{
+                    console.log(`data channel onopen: ${gdc2.isOpen()}`)
+                    console.log(`data channel onopen: ${gdc2.getId()} ${gdc2.getLabel()}`)
+
+                }catch(err){
+                  console.log(err)
+                }
+                
+                })
+
+                gdc2.onMessage((msg)=>{
+                    console.log(`data channel msg: ${msg}`)
+                    if(gdc2.isOpen())
+                        gdc2.sendMessage(" test " + 123)
+                })
+
 
         // setInterval(()=>{
         //     count++
@@ -88,15 +117,15 @@ peerConnection.onGatheringStateChange((state) => {
 
 
 let gdc = peerConnection.createDataChannel("peerId1");
-let gdc1 = peerConnection.createDataChannel("peerId2");
+// let gdc1 = peerConnection.createDataChannel("peerId2");
 
-gdc.onOpen((event)=>{
-    console.log(`data channel onopen: id=${gdc.id}, label ${gdc.label}.`)
-})
+// gdc.onOpen((event)=>{
+//     console.log(`data channel onopen: id=${gdc.id}, label ${gdc.label}.`)
+// })
 
-gdc1.onOpen((event)=>{
-    console.log(`data channel onopen: id=${gdc1.id}, label ${gdc1.label}.`)
-})
+// gdc1.onOpen((event)=>{
+//     console.log(`data channel onopen: id=${gdc1.id}, label ${gdc1.label}.`)
+// })
 
 // track.setMediaHandler(session);
 // track.onMessage((msg) => {
