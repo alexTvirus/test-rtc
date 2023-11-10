@@ -10,14 +10,79 @@
 <textarea cols="50" rows="50"></textarea>
 <button>Submit</button>
 
+<input value="text" type="text" id="id_data"></input>
+<button id="btn_id">sendid</button>
+
 <script>
-     rtc = new RTCPeerConnection({
-            // Recommended for libdatachannel
-            bundlePolicy: "max-bundle",
-        });
+    var count = 1023
+    var arrayData = []
+     rtc = new RTCPeerConnection({'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]});
      rtc.onconnectionstatechange = (state) => {
             console.log('State: ', rtc.connectionState);
+            if(rtc.connectionState == "connected"){
+
+                //    setInterval(()=>{
+                //     count++
+
+                //     let gdc2 = rtc.createDataChannel("kikik"+count,{
+                //             negotiated:true,
+                //             id: count}
+                //             );
+                //     arrayData[count] = gdc2
+                //         gdc2.onopen  = (event) => {
+                //              if(gdc2.readyState  == "open")   
+                //                 gdc2.send("ffwefefwef"+count);
+                //         }
+
+                //         gdc2.onmessage = (event) => {
+                //             console.log('onmessage: ', event.data);
+                            
+                //         }
+                
+
+                // },5000)
+
+                   let gdc2 = rtc.createDataChannel("kikik"+count,{
+                                negotiated:true,
+                                id: 1023}
+                                );
+                        arrayData[count] = gdc2
+                            gdc2.onopen  = (event) => {
+                                 if(gdc2.readyState  == "open")   
+                                    gdc2.send("ffwefefwef"+1024);
+                            }
+
+                            gdc2.onmessage = (event) => {
+                                console.log('onmessage: ', event.data);
+                                
+                            }
+            }
         }
+
+       const myElement = document.getElementById("btn_id");
+     
+     myElement.addEventListener('click',   () => {
+        let gdc2 = rtc.createDataChannel("kikik"+count,{
+                                negotiated:true,
+                                id: 1021}
+                                );
+                        arrayData[count] = gdc2
+                            gdc2.onopen  = (event) => {
+                                 if(gdc2.readyState  == "open")   
+                                    gdc2.send("ffwefefwef"+1024);
+                            }
+
+                            gdc2.onmessage = (event) => {
+                                console.log('onmessage: ', event.data);
+                                
+                            }
+
+
+        // input = document.getElementById("id_data");
+        // let it = arrayData[input.value]
+        // it.send("ffwefefwef "+input.value);
+    })        
+
 
     rtc.onicegatheringstatechange = (state) => {
         console.log('State: ', rtc.iceGatheringState);
@@ -33,6 +98,8 @@
 
         sendChannel = rtc.createDataChannel('sendDataChannel');
 
+
+
         sendChannel.onmessage = (event) => {
             console.log('onmessage: ', event);
         }
@@ -42,6 +109,8 @@
             console.log('onopen: ', sendChannel.readyState);
             sendChannel.send("ffwefefwef");
         }
+
+
 
         // tao offer
         const offerDescription =  rtc.createOffer();

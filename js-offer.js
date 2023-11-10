@@ -15,8 +15,47 @@ nodeDataChannel.initLogger('Debug');
 
 let peerConnection = new nodeDataChannel.PeerConnection('pc', { iceServers: [] });
 
+
+
+function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+var count = 1019
 peerConnection.onStateChange((state) => {
     console.log('State: ', state);
+    if(state == "connected"){
+
+        // setInterval(()=>{
+        //     count++
+        //     let gdc2 = peerConnection.createDataChannel("peerIdx"+count,{
+        //             negotiated:true,
+        //             id: count}
+        //             );
+
+        //         gdc2.onOpen((event)=>{
+                
+        //         try{
+        //             console.log(`data channel onopen: ${gdc2.getId()} ${gdc2.getLabel()}`)
+        //             if(gdc2.readyState  == "open")
+        //                 gdc2.sendMessage(" test " + count)    
+        //         }catch(err){
+        //           console.log(err)
+        //         }
+                
+        //         })
+
+        //         gdc2.onMessage((msg)=>{
+        //             console.log(`data channel msg: ${msg}`)
+                    
+        //         })
+
+        // },5000)
+      
+    }
+
 });
 peerConnection.onGatheringStateChange((state) => {
     // console.log('GatheringState: ', state);
@@ -31,21 +70,33 @@ peerConnection.onGatheringStateChange((state) => {
         rl.question('## Please copy/paste the answer provided by the browser: \n', (sdp) => {
             let sdpObj = JSON.parse(sdp);
             peerConnection.setRemoteDescription(sdpObj.sdp, sdpObj.type);
+
+            
+
             // console.log(track.isOpen());
             // rl.close();
         });
     }
 });
 
-// let video = new nodeDataChannel.Video('video', 'RecvOnly');
-// video.addH264Codec(96);
-// video.setBitrate(3000);
 
-// let track = peerConnection.addTrack(video);
-// let session = new nodeDataChannel.RtcpReceivingSession();
 
-let gdc = peerConnection.createDataChannel("peerId");
 
+
+
+
+
+
+let gdc = peerConnection.createDataChannel("peerId1");
+let gdc1 = peerConnection.createDataChannel("peerId2");
+
+gdc.onOpen((event)=>{
+    console.log(`data channel onopen: id=${gdc.id}, label ${gdc.label}.`)
+})
+
+gdc1.onOpen((event)=>{
+    console.log(`data channel onopen: id=${gdc1.id}, label ${gdc1.label}.`)
+})
 
 // track.setMediaHandler(session);
 // track.onMessage((msg) => {

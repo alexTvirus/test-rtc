@@ -19,6 +19,7 @@ let peerConnection = new nodeDataChannel.PeerConnection('pc', { iceServers: [] }
 
 peerConnection.onStateChange((state) => {
     console.log('State: ', state);
+
 });
 peerConnection.onGatheringStateChange((state) => {
     // console.log('GatheringState: ', state);

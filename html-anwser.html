@@ -9,14 +9,74 @@
 <p>Please enter the offer provided to you by the application: </p>
 <textarea cols="50" rows="50"></textarea>
 <button>Submit</button>
+<input value="text" type="text" id="id_data"></input>
+<button id="btn_id">sendid</button>
 
 <script>
-     rtc = new RTCPeerConnection({
-            // Recommended for libdatachannel
-            bundlePolicy: "max-bundle",
-        });
+    var count = 1023
+    var arrayData = []
+     rtc = new RTCPeerConnection({'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]});
      rtc.onconnectionstatechange = (state) => {
             console.log('State: ', rtc.connectionState);
+                if(rtc.connectionState == "connected"){
+
+                    //    setInterval(()=>{
+                    //     count++
+
+                    //     let gdc2 = rtc.createDataChannel("kikik"+count,{
+                    //             negotiated:true,
+                    //             id: count}
+                    //             );
+                    //     arrayData[count] = gdc2
+                    //         gdc2.onopen  = (event) => {
+                    //              if(gdc2.readyState  == "open")   
+                    //                 gdc2.send("ffwefefwef"+count);
+                    //         }
+
+                    //         gdc2.onmessage = (event) => {
+                    //             console.log('onmessage: ', event.data);
+                                
+                    //         }
+                          
+
+                    // },5000)
+                     let gdc2 = rtc.createDataChannel("kikik"+count,{
+                                negotiated:true,
+                                id: 1023}
+                                );
+                        arrayData[count] = gdc2
+                            gdc2.onopen  = (event) => {
+                                 if(gdc2.readyState  == "open")   
+                                    gdc2.send("ffwefefwef"+1024);
+                            }
+
+                            gdc2.onmessage = (event) => {
+                                console.log('onmessage: ', event.data);
+                                
+                            }         
+
+
+
+        // sendChannel = rtc.createDataChannel('kkkk',{
+        //     negotiated:true,
+        //     id: 123});
+
+
+
+        // sendChannel.onmessage = (event) => {
+        //     console.log('onmessage: ', event.data);
+        //     sendChannel.send("ffwefefwef");
+        // }
+
+        // sendChannel.onopen  = (event) => {
+
+        //     console.log('onopen sendChannel: ', sendChannel.readyState);
+        //     if(sendChannel.readyState = "open")
+        //         sendChannel.send("ffwefefwef");
+        // }
+
+
+        }
         }
 
     rtc.onicegatheringstatechange = (state) => {
@@ -29,6 +89,39 @@
             }
         }
 
+
+     rtc.ondatachannel = (evt) => {
+                console.log(`ondatachannel new data channel created: id ${evt.channel.id}, label ${evt.channel.label}.`);
+                //dc = evt.channel;
+                //dc.onopen = (event) => console.log(`data channel onopen: ${event}.`);
+                //dc.onclose = (event) => console.log(`data channel onclose: ${event}.`);
+                //dc.onmessage = onDataChannelMessage;
+            }   
+
+
+     const myElement = document.getElementById("btn_id");
+     
+     myElement.addEventListener('click',   () => {
+        let gdc2 = rtc.createDataChannel("kikik"+count,{
+                                negotiated:true,
+                                id: 1021}
+                                );
+                        arrayData[count] = gdc2
+                            gdc2.onopen  = (event) => {
+                                 if(gdc2.readyState  == "open")   
+                                    gdc2.send("ffwefefwef"+1024);
+                            }
+
+                            gdc2.onmessage = (event) => {
+                                console.log('onmessage: ', event.data);
+                                
+                            }
+
+
+        // input = document.getElementById("id_data");
+        // let it = arrayData[input.value]
+        // it.send("ffwefefwef "+input.value);
+    })       
 
     document.querySelector('button').addEventListener('click',   () => {
         let offer = JSON.parse(document.querySelector('textarea').value);
