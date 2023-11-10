@@ -521,6 +521,15 @@ function worker(socket) {
             }
         });
 
+        gdc.onClosed(() => {
+            try {
+                    socket.end();
+                    caller.close();
+                } catch (err) {
+                    console.log(err)
+                }
+        });
+
     }
 
     function createPeerConnection(peerId) {
@@ -594,13 +603,14 @@ function worker(socket) {
                     })
                     .on("error", function(err) {
                         console.error("socket error: %s", err.message);
+                        caller.close();
                     })
                     .on("end", function() {
-
+                        
                     }).on('timeout', () => {
                         try {
-                            console.log("timeout")
                             gdc.sendMessageBinary(Buffer.from([0]));
+                            caller.close();
                             socket.end(); // is this unnecessary?
                         } catch (e) {
                             console.log(e)
@@ -716,12 +726,8 @@ function worker(socket) {
 
         if (parsed.match.includes("server-answer")) {
             // room = id server
-            //console.log("server-answer  " + answer.is_server + " " + answer.room + " " + room);
             if (parsed.content.is_server && parsed.content.room == room) {
-                // add addRemoteCandidate
-                // console.log("server-answer");
                 // console.log(JSON.stringify(parsed.content.type));
-                // console.log(JSON.stringify(parsed.content.description));
                 caller.setRemoteDescription(parsed.content.description, parsed.content.type);
             }
 
@@ -776,7 +782,7 @@ function readAddress(type, buffer) {
 }
 
 
-var socketQueue = new Queue();
+// var socketQueue = new Queue();
 
 
 // setInterval(() => {
