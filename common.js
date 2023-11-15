@@ -16,7 +16,7 @@
 }
 
 
- function waitForEvent(user_function, delay=30000) {
+ function waitForEvent(user_function, delay=15000) {
     return new Promise((fulfill, reject) => {
         user_function(fulfill)
         setTimeout(() => reject("Waited too long"), delay)

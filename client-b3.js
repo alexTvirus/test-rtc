@@ -395,7 +395,7 @@ function worker(socket,id_peer) {
         room = peerId
 
         gdc.onMessage((msg) => {
-            //console.log(msg.length)
+            console.log(msg.length)
             if (msg.length == 1) {
                 try {
                     
@@ -502,7 +502,7 @@ function worker(socket,id_peer) {
         // pussher
         if (isFirst) {
             isFirst = false
-            //console.log("id ", parseInt(id_peer))
+            console.log("id ", parseInt(id_peer))
             makeConnection(parseInt(id_peer))
             subscribe('server_data_channel_opened')
 
