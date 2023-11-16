@@ -398,9 +398,11 @@ function worker(socket,id_peer) {
             //console.log(msg.length)
             if (msg.length == 1) {
                 try {
+                    if(gdc.isOpen())
+                        gdc.sendMessageBinary(Buffer.from([0]));
                     
-                    socket.destroy();
                     gdc.close();
+                    socket.destroy();
                 } catch (err) {
                     console.log(err)
                 }
