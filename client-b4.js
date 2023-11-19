@@ -130,27 +130,27 @@ function workerPeer() {
 
     var client_response;
 
-    function getRandomInt(min, max) {
+	function getRandomInt(min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
-
-    let guid = () => {
-        let s4 = () => {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-        }
-        //return id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    }
+	
+	let guid = () => {
+			let s4 = () => {
+				return Math.floor((1 + Math.random()) * 0x10000)
+					.toString(16)
+					.substring(1);
+			}
+			//return id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
+			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+		}
 
     function makeConnection(peerId) {
 
         global_caller = createPeerConnection(peerId);
 
-        gdc = global_caller.createDataChannel(guid(), {
+        gdc = global_caller.createDataChannel(guid(),{
             // negotiated:true,
             id: 0,
             portRangeBegin: 5000,
@@ -178,14 +178,14 @@ function workerPeer() {
             if (state == 'disconnected') {
 
                 try {
-
+                    
                 } catch (e) {
                     console.log(e);
                 }
             }
             if (state == 'closed') {
                 try {
-
+                   
                 } catch (e) {
                     console.log(e);
                 }
@@ -194,43 +194,43 @@ function workerPeer() {
         });
         peerConnection.onGatheringStateChange((state) => {
             // console.log('GatheringState: ', state);
-            if (state == "complete") {
-                let desc = peerConnection.localDescription();
-                // desc = JSON.parse();
-                // let temp = descriptions
-                // for(let i=0 ; i < candidates.length ; i++){
-                //     temp = temp + candidates[i]+"\r\n"
-                // }
-                //  console.log(temp)
-                // let object = Object.assign(
-                //   {},
-                //   { sdp: temp },
-                //   { type:  "offer"}
-                // );
-                publish("client-sdp", {
-                    "description": JSON.stringify(desc),
-                    "room": peerId,
-                    "is_client": true,
-                    "from": id,
-                    "type": "offer"
-                })
-                // rl.question('## Please copy/paste the answer provided by the browser: \n', (sdp) => {
-                //     let sdpObj = JSON.parse(sdp);
-                //     publish("client-sdp", {
-                //     "description": JSON.stringify(sdpObj),
-                //     "room": peerId,
-                //     "is_client": true,
-                //     "from": id,
-                //     "type": "offer"
-                //     })
+            if(state == "complete"){
+					let desc = peerConnection.localDescription();
+                    // desc = JSON.parse();
+                    // let temp = descriptions
+                    // for(let i=0 ; i < candidates.length ; i++){
+                    //     temp = temp + candidates[i]+"\r\n"
+                    // }
+                    //  console.log(temp)
+                    // let object = Object.assign(
+                    //   {},
+                    //   { sdp: temp },
+                    //   { type:  "offer"}
+                    // );
+                    publish("client-sdp", {
+                        "description": JSON.stringify(desc),
+                        "room": peerId,
+                        "is_client": true,
+                        "from": id,
+                        "type": "offer"
+                        })
+                    // rl.question('## Please copy/paste the answer provided by the browser: \n', (sdp) => {
+                    //     let sdpObj = JSON.parse(sdp);
+                    //     publish("client-sdp", {
+                    //     "description": JSON.stringify(sdpObj),
+                    //     "room": peerId,
+                    //     "is_client": true,
+                    //     "from": id,
+                    //     "type": "offer"
+                    //     })
 
-                //     rl.close();
-                // });
+                    //     rl.close();
+                    // });
 
 
-
+                    
             }
-
+        
         });
 
         return peerConnection;
@@ -247,8 +247,8 @@ function workerPeer() {
             //})
 
             axios.get(`http://localhost:8000/peer/id/${id}`)
-                .then((data) => { console.log("axios success: "); })
-                .catch((error) => { console.log("axios error: " + error); });
+			.then((data) => { console.log("axios success: "); })
+			.catch((error) => { console.log("axios error: " + error); });
 
             console.log("id ", id)
 
@@ -295,7 +295,7 @@ function workerPeer() {
             if (parsed.content.is_server && parsed.content.room == room) {
                 // add addRemoteCandidate
                 // console.log("server-answer");
-                // console.log(JSON.stringify(parsed.content.type));
+				// console.log(JSON.stringify(parsed.content.type));
                 // console.log(JSON.stringify(parsed.content.description));
                 global_caller.setRemoteDescription(parsed.content.description, parsed.content.type);
             }
@@ -308,95 +308,15 @@ function workerPeer() {
 
 
 
-class WorkerData {
+function worker(socket,id_peer) {
+    let isFirst = true
+    var ws = new WebSocket1('ws://localhost:3000/', {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+        }
+    })
 
-    id_peer
-    socket = null
-    isFirst = true
-    ws = null
-    id
-    room
-    caller
-    isConnect = false;
-
-    gdc = null;
-    peerId;
-    client_response;
-    timeout = false
-
-    setUp() {
-        this.id = this.randomId(16);
-
-        this.ws = new WebSocket1('ws://localhost:3000/', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-            }
-        })
-
-
-        this.ws.on('open', function() {
-            // pussher
-            if (this.isFirst) {
-                this.isFirst = false
-                //console.log("id ", parseInt(id_peer))
-                makeConnection(parseInt(this.id_peer))
-                subscribe('server_data_channel_opened')
-
-
-                this.socket.on("error", (err) => {
-                    console.error("socket error: %s", err.message);
-                    try {
-                        this.socket.destroy(); // is this unnecessary?
-                    } catch (e) {
-                        console.log(e)
-                    }
-                })
-
-                this.socket.on("close", () => {
-                    try {
-                        // neu nodeDataChannel open thi send 
-                        if (this.gdc && this.gdc.isOpen()) {
-                            this.gdc.sendMessageBinary(Buffer.from([0]));
-                            this.gdc.close();
-                            arrayIds[id_peer] = true
-                        }
-
-                    } catch (e) {
-                        console.log(e);
-                    }
-
-
-                })
-
-                this.socket.on('timeout', () => {
-                    try {
-
-                        this.socket.destroy(); // is this unnecessary?
-                    } catch (e) {
-                        console.log(e)
-                    }
-                })
-            }
-        })
-
-        this.ws.on('message', (responseData) => {
-            var parsed = JSON.parse(responseData);
-
-            if (parsed.match.includes("server_data_channel_opened")) {
-
-                if (parsed.content.client_id == this.id_peer) {
-
-                    this.ListenDataFromSocket()
-                }
-            }
-
-        })
-
-    }
-
-
-
-     randomId(length) {
+    function randomId(length) {
         var result = '';
         var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         var charactersLength = characters.length;
@@ -406,163 +326,241 @@ class WorkerData {
         return result;
     }
 
+    var id, room, caller;
+    var isConnect = false;
+    id = randomId(16);
+    var gdc = null;
+    var peerId;
 
-
-     publish(destination, content) {
-        this.ws.send(JSON.stringify({
+    function publish(destination, content) {
+        ws.send(JSON.stringify({
             type: 'publish',
             destination: destination,
             content: content
         }));
     }
 
-     subscribe(destination) {
-        this.ws.send(JSON.stringify({
+    function subscribe(destination) {
+        ws.send(JSON.stringify({
             type: 'subscribe',
             destination: destination
         }));
     };
 
+    function endCall() {
+        room = undefined;
+        try {
+            socket.destroy();
+            gdc.close();
+        } catch (err) {
 
+        }
+    }
 
+    function endCurrentCall() {
+        publish('client-endcall', {
+            "room": room,
+            "is_server": true
+        })
+        endCall();
+    }
 
+    var client_response;
 
-
-     getRandomInt(min, max) {
+    function getRandomInt(min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
-
-     guid = () => {
-        let s4 = () => {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
+    
+    let guid = () => {
+            let s4 = () => {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
+            //return id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
         }
-        //return id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    }
 
+	var timeout = false
 
+    function makeConnection(peerId) {
 
-     makeConnection(peerId) {
-
-        this.gdc = global_caller.createDataChannel(this.guid, {
-            negotiated: true,
-            id: this.peerId,
+        gdc = global_caller.createDataChannel(guid(),{
+            negotiated:true,
+            id: peerId,
             portRangeBegin: 5000,
             portRangeEnd: 9999,
         });
 
-        this.room = this.peerId
+        room = peerId
 
-        this.gdc.onMessage((msg) => {
+        gdc.onMessage((msg) => {
             //console.log(msg)
             if (msg.length == 1) {
                 try {
-                    if (this.gdc.isOpen())
-                        this.gdc.sendMessageBinary(Buffer.from([0]));
-
-                    this.gdc.close();
-                    this.socket.destroy();
+                    if(gdc.isOpen())
+                        gdc.sendMessageBinary(Buffer.from([0]));
+                    
+                    gdc.close();
+                    socket.destroy();
                 } catch (err) {
                     console.log(err)
                 }
-            } else if ((msg.length == 2 && msg[0] == 45)) {
+            } else if((msg.length == 2 && msg[0] == 45)){
+				
+                socket.write(client_response);   
+            }
 
-                this.socket.write(this.client_response);
-            } else {
+            else {
                 try {
-                    this.socket.write(msg);
+                    socket.write(msg);
                 } catch (err) {
                     console.log(err)
                 }
-
+                
             }
         });
 
-        this.gdc.onClosed(() => {
+        gdc.onClosed(() => {
             try {
-                console.log("onClosed")
-                if (this.gdc.isOpen())
-                    this.gdc.sendMessageBinary(Buffer.from([0]));
-                arrayIds[id_peer] = true
-                this.socket.destroy();
-            } catch (err) {
-                console.log(err)
-            }
+                    console.log("onClosed")
+                    if(gdc.isOpen())
+                        gdc.sendMessageBinary(Buffer.from([0]));
+                    arrayIds[id_peer] = true
+                    socket.destroy();
+                } catch (err) {
+                    console.log(err)
+                }
         })
 
-        this.gdc.onOpen(() => {
+        gdc.onOpen(() => {
             try {
-                if (this.gdc.isOpen()) {
-                    console.log(`${id_peer}`)
-                    axios.get(`http://localhost:8000/id/${id_peer}`)
-                }
+                    if(gdc.isOpen()){
+						console.log(`${id_peer}`)
+                        axios.get(`http://localhost:8000/id/${id_peer}`)
+                    }
 
-            } catch (err) {
-                console.log(err)
-            }
+                } catch (err) {
+                    console.log(err)
+                }
         });
 
     }
 
-     ListenDataFromSocket() {
+    function ListenDataFromSocket() {
 
-        try {
-            this.ws.close();
-        } catch (e) {
-            console.log(e);
-        }
-        this.socket
-            .on("data", function(msg) {
-                ////console.log(msg)
-                var socks_version = msg[0];
-                if (!this.socket.address5 && socks_version === 5 && (msg.length == 3 || msg.length == 4)) {
-                    try {
-                        //console.log(msg)
-                        this.socket.write(Buffer.from([5, 0]));
-                    } catch (e) {}
-                } else {
-                    if (!this.socket.address5) {
-                        // gdc.onMessage((msg) => {
-                        //  //console.log("onMessage 2");
-                        // });
-                        // lấy ip/port từ message socket
-                        var address_type = msg[3];
-                        var address5 = readAddress(address_type, msg.slice(4));
-                        var response = Buffer.from(msg);
-                        response[1] = 0;
-                        this.client_response = response
-                        // try {
-                        //     socket.write(response);
-                        // } catch (e) {}
-                        //console.log(address5);
-                        this.socket.address5 = address5;
-                        // gửi address / port sang server , thông qua udp
-
-                        try {
-                            // console.log("send 1")
-
-                            this.gdc.sendMessageBinary(Buffer.from("-1" + this.socket.address5.address + ":" + this.socket.address5.port));
-                        } catch (e) {}
-                    } else {
-                        // gửi data sang server thông qua udp
-                        try {
-                            // console.log("send 2")
-                            this.gdc.sendMessageBinary(msg);
-                        } catch (e) {}
-
-
-                    }
+                try {
+                    ws.close();
+                } catch (e) {
+                    console.log(e);
                 }
-            })
+                socket
+                    .on("data", function(msg) {
+                        ////console.log(msg)
+                        var socks_version = msg[0];
+                        if (!socket.address5 && socks_version === 5 && (msg.length == 3 || msg.length == 4)) {
+                            try {
+                                //console.log(msg)
+                                socket.write(Buffer.from([5, 0]));
+                            } catch (e) {}
+                        } else {
+                            if (!socket.address5) {
+                                // gdc.onMessage((msg) => {
+                                //  //console.log("onMessage 2");
+                                // });
+                                // lấy ip/port từ message socket
+                                var address_type = msg[3];
+                                var address5 = readAddress(address_type, msg.slice(4));
+                                var response = Buffer.from(msg);
+                                response[1] = 0;
+                                client_response = response
+                                // try {
+                                //     socket.write(response);
+                                // } catch (e) {}
+                                //console.log(address5);
+                                socket.address5 = address5;
+                                // gửi address / port sang server , thông qua udp
+
+                                try {
+                                    // console.log("send 1")
+                                    
+                                    gdc.sendMessageBinary(Buffer.from("-1"+socket.address5.address + ":" + socket.address5.port));
+                                } catch (e) {}
+                            } else {
+                                // gửi data sang server thông qua udp
+                                try {
+                                    // console.log("send 2")
+                                    gdc.sendMessageBinary(msg);
+                                } catch (e) {}
+
+
+                            }
+                        }
+                    })
 
 
     }
 
 
+    ws.on('open', function() {
+        // pussher
+        if (isFirst) {
+            isFirst = false
+            //console.log("id ", parseInt(id_peer))
+            makeConnection(parseInt(id_peer))
+            subscribe('server_data_channel_opened')
+
+
+            socket.on("error", (err)=> {
+                        console.error("socket error: %s", err.message);
+                         try {
+                            socket.destroy(); // is this unnecessary?
+                        } catch (e) {
+                            console.log(e)
+                        }
+                    })
+
+                 socket.on("close", ()=> {
+                        try {
+                            // neu nodeDataChannel open thi send 
+                            if(gdc && gdc.isOpen()){
+                                gdc.sendMessageBinary(Buffer.from([0]));
+                                gdc.close();
+								arrayIds[id_peer] = true
+                            }
+
+                        } catch (e) {
+                            console.log(e);
+                        }
+                        
+                        
+                    })
+
+                 socket.on('timeout', () => {
+                        try {
+						
+                            socket.destroy(); // is this unnecessary?
+                        } catch (e) {
+                            console.log(e)
+                        }
+                    })
+        }
+    })
+
+    ws.on('message', (responseData) => {
+        var parsed = JSON.parse(responseData);
+       
+        if (parsed.match.includes("server_data_channel_opened")) {
+            
+            if (parsed.content.client_id == id_peer) {
+				
+                ListenDataFromSocket()
+            }
+        }
+
+    })
 
 }
 //---------------
@@ -573,8 +571,8 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function setUp() {
-    for (let i = 1; i < 1022; i++) {
+function setUp(){
+    for(let i=1 ; i < 1022 ; i++){
         arrayIds[i] = true
     }
 }
@@ -582,40 +580,35 @@ function setUp() {
 setUp()
 workerPeer()
 
-function controller(socket) {
+function controller(socket){
     let id = -1
     for (var key in arrayIds) {
-        if (arrayIds[key]) {
+        if (arrayIds[key]){
             id = key
             arrayIds[key] = false
             break;
         }
     }
     if (id == -1)
-        try {
-            socket.on("error", () => {
+        try{
+             socket.on("error", ()=> {
+                        
+                    })
+              socket.on("close", ()=> {
+                        
+                    })
+               socket.on("timeout", ()=> {
+                        
+                    })
+               socket.destroy()
 
-            })
-            socket.on("close", () => {
-
-            })
-            socket.on("timeout", () => {
-
-            })
-            socket.destroy()
-
-
-        } catch (e) {
+            
+        }catch(e){
 
         }
-
-    else{
-        let w = new WorkerData()
-        w.socket = socket
-        w.id_peer = id
-        w.setUp()
-    }
-
+        
+    else
+        worker(socket,id)
 }
 
 //--------------------------------
