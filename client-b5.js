@@ -70,9 +70,7 @@ function randomId(length) {
 //--------------------------------
 var global_caller
 var isPeerConnect = false
-var global_ws_data
 
-//---------------------
 
 function workerPeer(callback) {
     let isFirst = true
@@ -388,10 +386,7 @@ class WorkerData {
             try {
                 if (out.gdc.isOpen()) {
                     console.log(`${out.id_peer}`)
-                    global_ws_data.send(JSON.stringify({
-                        id: out.id_peer
-                    }));
-                    // axios.get(`http://localhost:8000/id/${out.id_peer}`)
+                    axios.get(`http://localhost:8000/id/${out.id_peer}`)
                 }
 
             } catch (err) {
@@ -550,22 +545,12 @@ class WorkerData {
 
 //---------------
 
-function setUpWsData(callback){
-    global_ws_data = new WebSocket1('ws://patch-nasal-cast.glitch.me/', {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-        }
-    })
-    global_ws_data.on('open', () => {
-        callback()
-    })
-}
 
 var arrayDatas = {}
 
 
-var createDatas = function() {
-    for (let i = 10; i < 20; i++) {
+function createDatas() {
+    for (let i = 10; i < 140; i++) {
         let obj = new WorkerData()
         obj.socket = null
         obj.id_peer = i
@@ -574,8 +559,8 @@ var createDatas = function() {
     }
 }
 
-setUpWsData(()=>workerPeer(createDatas))
 
+workerPeer(createDatas)
 
 function checkConnectChannel(datachannel1,id) {
     if (datachannel1.isConnect === false) {

@@ -2,11 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a0d875db-e8b3-4ff2-bdc2-b073031b3381" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client.js" beforeDir="false" afterPath="$PROJECT_DIR$/client.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/html-anwser.html" beforeDir="false" afterPath="$PROJECT_DIR$/html-anwser.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/html-offer.html" beforeDir="false" afterPath="$PROJECT_DIR$/html-offer.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/js-anwser.js" beforeDir="false" afterPath="$PROJECT_DIR$/js-anwser.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/js-offer.js" beforeDir="false" afterPath="$PROJECT_DIR$/js-offer.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -22,8 +19,19 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/client.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="34">
-              <caret line="652" lean-forward="true" selection-start-line="652" selection-end-line="652" />
+            <state relative-caret-position="293">
+              <caret line="552" column="27" selection-start-line="552" selection-start-column="27" selection-end-line="552" selection-end-column="27" />
+              <folding>
+                <element signature="e#1651#8638#0" />
+                <element signature="e#16261#17439#0" />
+                <element signature="e#17548#18989#0" />
+                <element signature="e#19009#19712#0" />
+                <element signature="e#19735#20071#0" />
+                <element signature="e#20108#20262#0" />
+                <element signature="e#20291#20417#0" />
+                <element signature="e#20448#20582#0" />
+                <element signature="e#20595#20930#0" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -40,10 +48,16 @@
       <find>client</find>
       <find>endcall</find>
       <find>setLocalDescription</find>
+      <find>isPeerConnect</find>
+      <find>arrayIds</find>
+      <find>isUsed</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/client.js" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -62,10 +76,14 @@
       <list>
         <option value="$PROJECT_DIR$/.idea/vcs.xml" />
         <option value="$PROJECT_DIR$/.idea/vcs.xml" />
+        <option value="$PROJECT_DIR$/.idea/client-server-rpc.iml" />
+        <option value="$PROJECT_DIR$/.idea/misc.xml" />
+        <option value="$PROJECT_DIR$/.idea/modules.xml" />
+        <option value="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="7">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="10" />
     <option name="y" value="20" />
     <option name="width" value="1283" />
@@ -77,15 +95,16 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="ProjectPane" />
       <pane id="Scope" />
+      <pane id="ProjectPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="editor.config.ad.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/js-anwser.js" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
     <property name="ts.external.directory.path" value="D:\Mo-Rong\ide\WebStorm 2019.1.4\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
   </component>
   <component name="RunDashboard">
@@ -135,27 +154,40 @@
       <workItem from="1699605792214" duration="578000" />
       <workItem from="1699606386997" duration="27000" />
       <workItem from="1699646005213" duration="3163000" />
+      <workItem from="1700396592825" duration="4901000" />
+      <workItem from="1700404088930" duration="5027000" />
+      <workItem from="1700424406390" duration="2968000" />
+      <workItem from="1700469565423" duration="3851000" />
+      <workItem from="1700473735440" duration="289000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="14213000" />
+    <option name="totallyTimeSpent" value="31249000" />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.17708333" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16369048" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="npm" order="2" side_tool="true" />
       <window_info id="Favorites" order="3" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.20294599" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.30441898" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.5433715" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.400982" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.3289689" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
@@ -180,14 +212,17 @@
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/js-offer.js</url>
           <line>44</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/js-anwser.js</url>
           <line>35</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="26" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/client.js</url>
+          <line>575</line>
+          <option name="timeStamp" value="31" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -238,10 +273,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/node_modules/ws/lib/websocket.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="101">
+          <caret line="393" selection-start-line="393" selection-end-line="393" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/client.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="652" lean-forward="true" selection-start-line="652" selection-end-line="652" />
+        <state relative-caret-position="293">
+          <caret line="552" column="27" selection-start-line="552" selection-start-column="27" selection-end-line="552" selection-end-column="27" />
+          <folding>
+            <element signature="e#1651#8638#0" />
+            <element signature="e#16261#17439#0" />
+            <element signature="e#17548#18989#0" />
+            <element signature="e#19009#19712#0" />
+            <element signature="e#19735#20071#0" />
+            <element signature="e#20108#20262#0" />
+            <element signature="e#20291#20417#0" />
+            <element signature="e#20448#20582#0" />
+            <element signature="e#20595#20930#0" />
+          </folding>
         </state>
       </provider>
     </entry>
