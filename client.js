@@ -4,10 +4,11 @@ var WebSocket = require('rpc-websockets').Client
 const {Worker} = require("worker_threads");
 const WebSocket1 = require('ws');
 // import * as common from './common.js';
-var common = require('./common.js');
+const common = require('./common.js');
 const readline = require("readline");
 //const fs = require('fs');
 const axios = require('axios');
+
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -57,46 +58,32 @@ class Queue {
 }
 
 
-function randomId(length) {
-    var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-}
-
 //--------------------------------
 var global_caller
 var isPeerConnect = false
 var global_ws_data
+const PORT = 1101
+const numberChannel = 50
 
 //---------------------
 
+// tao peer connection
 function workerPeer(callback) {
     let isFirst = true
-    var ws = new WebSocket1('ws://localhost:3000/', {
+    var ws = new WebSocket1('ws://chain-zircon-anaconda.glitch.me/', {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
         }
     })
 
-    function randomId(length) {
-        var result = '';
-        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        var charactersLength = characters.length;
-        for (var i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-    }
 
     var id, room
     var isConnect = false;
-    id = randomId(16);
+    id = common.randomId(16);
     var gdc;
     var peerId = id;
+    var client_response;
+
 
     function publish(destination, content) {
         ws.send(JSON.stringify({
@@ -130,29 +117,12 @@ function workerPeer(callback) {
         endCall();
     }
 
-    var client_response;
-
-    function getRandomInt(min, max) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    let guid = () => {
-        let s4 = () => {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-        }
-        //return id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    }
 
     function makeConnection(peerId) {
 
         global_caller = createPeerConnection(peerId);
 
-        gdc = global_caller.createDataChannel(guid(), {
+        gdc = global_caller.createDataChannel(common.guid(), {
             // negotiated:true,
             id: 0,
             portRangeBegin: 5000,
@@ -166,7 +136,9 @@ function workerPeer(callback) {
 
         // Create PeerConnection
         ////console.log(' createPeerConnection  ', peerId);
-        let peerConnection = new nodeDataChannel.PeerConnection('pc', {iceServers: []});
+        let peerConnection = new nodeDataChannel.PeerConnection('pc', {
+            iceServers: ['stun:stun.l.google.com:19302']
+        });
         peerConnection.onStateChange((state) => {
             if (state == 'connected') {
                 isPeerConnect = true
@@ -177,21 +149,11 @@ function workerPeer(callback) {
                     console.log(e);
                 }
             }
-            if (state == 'disconnected') {
-
-                try {
-
-                } catch (e) {
-                    console.log(e);
-                }
-            }
-            if (state == 'closed') {
-                try {
-
-                } catch (e) {
-                    console.log(e);
-                }
-            }
+            // if (state == 'disconnected') {
+            // }
+            // if (state == 'closed') {
+                
+            // }
             console.log('peer State: ', state);
         });
         peerConnection.onGatheringStateChange((state) => {
@@ -218,17 +180,17 @@ function workerPeer(callback) {
         if (isFirst) {
             isFirst = false
 
-            //ws.notify('client-add-prepare-client', {
-            //    "id": id
-            //})
+            publish('client-add-prepare-client', {
+               "id": id
+            })
 
-            axios.get(`http://localhost:8000/peer/id/${id}`)
-                .then((data) => {
-                    console.log("axios success: ");
-                })
-                .catch((error) => {
-                    console.log("axios error: " + error);
-                });
+            // axios.get(`http://localhost:8000/peer/id/${id}`)
+            //     .then((data) => {
+            //         console.log("axios success: ");
+            //     })
+            //     .catch((error) => {
+            //         console.log("axios error: " + error);
+            //     });
 
             console.log("id ", id)
 
@@ -287,6 +249,7 @@ function workerPeer(callback) {
 
 }
 
+// tao cac datachannel
 class WorkerData {
 
     id_peer
@@ -306,9 +269,9 @@ class WorkerData {
 
     // chay lan dau tao gdc
     setUp() {
-        this.id = this.randomId(16);
+        this.id = common.randomId(16);
 
-        this.ws = new WebSocket1('ws://localhost:3000/', {
+        this.ws = new WebSocket1('ws://chain-zircon-anaconda.glitch.me/', {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
             }
@@ -354,7 +317,7 @@ class WorkerData {
                 try {
                     // if (out.gdc.isOpen())
                     //     out.gdc.sendMessageBinary(Buffer.from([0]));
-                    console.log(`closed ${out.id_peer}`)
+                    // console.log(`closed ${out.id_peer}`)
                     out.isUsed = false
                     out.socket.destroy();
                 } catch (err) {
@@ -375,7 +338,7 @@ class WorkerData {
 
         this.gdc.onClosed(() => {
             try {
-                console.log("onClosed")
+                // console.log("onClosed")
                 if (out.gdc.isOpen())
                     out.gdc.sendMessageBinary(Buffer.from([0]));
                 out.socket.destroy();
@@ -389,6 +352,7 @@ class WorkerData {
                 if (out.gdc.isOpen()) {
                     console.log(`${out.id_peer}`)
                     global_ws_data.send(JSON.stringify({
+                        method: 'client',
                         id: out.id_peer
                     }));
                     // axios.get(`http://localhost:8000/id/${out.id_peer}`)
@@ -432,16 +396,6 @@ class WorkerData {
         })
     }
 
-    randomId(length) {
-        var result = '';
-        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        var charactersLength = characters.length;
-        for (var i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-    }
-
 
     publish(destination, content) {
         this.ws.send(JSON.stringify({
@@ -458,27 +412,9 @@ class WorkerData {
         }));
     };
 
-
-    getRandomInt(min, max) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    guid() {
-        let s4 = () => {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-        }
-        //return id of format 'aaaaaaaa'-'aaaa'-'aaaa'-'aaaa'-'aaaaaaaaaaaa'
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-    }
-
-
     makeConnection(peerId) {
 
-        this.gdc = global_caller.createDataChannel(this.guid(), {
+        this.gdc = global_caller.createDataChannel(common.guid(), {
             negotiated: true,
             id: parseInt(this.id_peer),
             portRangeBegin: 5000,
@@ -513,7 +449,7 @@ class WorkerData {
                         // });
                         // lấy ip/port từ message socket
                         var address_type = msg[3];
-                        var address5 = readAddress(address_type, msg.slice(4));
+                        var address5 = common.readAddress(address_type, msg.slice(4));
                         var response = Buffer.from(msg);
                         response[1] = 0;
                         out.client_response = response
@@ -551,6 +487,7 @@ class WorkerData {
 //---------------
 
 function setUpWsData(callback){
+    // websocket co chuc nang setup event de tao ket noi rtc
     global_ws_data = new WebSocket1('ws://patch-nasal-cast.glitch.me/', {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
@@ -564,8 +501,16 @@ function setUpWsData(callback){
 var arrayDatas = {}
 
 
+function checkConnectChannel(datachannel1,id) {
+    if (datachannel1.isConnect === false) {
+        setTimeout(() => checkConnectChannel(datachannel1,id), 100); /* this checks the flag every 100 milliseconds*/
+    } else {
+        arrayDatas[id] = datachannel1
+    }
+}
+
 var createDatas = function() {
-    for (let i = 10; i < 20; i++) {
+    for (let i = 10; i < numberChannel; i++) {
         let obj = new WorkerData()
         obj.socket = null
         obj.id_peer = i
@@ -577,17 +522,7 @@ var createDatas = function() {
 setUpWsData(()=>workerPeer(createDatas))
 
 
-function checkConnectChannel(datachannel1,id) {
-    if (datachannel1.isConnect === false) {
-        setTimeout(() => checkConnectChannel(datachannel1,id), 100); /* this checks the flag every 100 milliseconds*/
-    } else {
-        arrayDatas[id] = datachannel1
-    }
-}
-
-
 function controller(socket) {
-    // createDatas()
     let id = -1
     for (var key in arrayDatas) {
         if (arrayDatas[key].isConnect && !arrayDatas[key].isUsed) {
@@ -623,45 +558,7 @@ function controller(socket) {
 
 //--------------------------------
 
-function formatIPv4(buffer) {
-    // buffer.length == 4
-    return buffer[0] + "." + buffer[1] + "." + buffer[2] + "." + buffer[3];
-}
 
-function formatIPv6(buffer) {
-    // buffer.length == 16
-    var parts = [];
-    for (var i = 0; i < 16; i += 2) {
-        parts.push(buffer.readUInt16BE(i).toString(16));
-    }
-    return parts.join(":");
-}
-
-function readAddress(type, buffer) {
-    if (type == 1) {
-        // IPv4 address
-        return {
-            family: "IPv4",
-            address: formatIPv4(buffer),
-            port: buffer.readUInt16BE(4),
-        };
-    } else if (type == 3) {
-        // Domain name
-        var length = buffer[0];
-        return {
-            family: "domain",
-            address: buffer.slice(1, length + 1).toString(),
-            port: buffer.readUInt16BE(length + 1),
-        };
-    } else if (type == 4) {
-        // IPv6 address
-        return {
-            family: "IPv6",
-            address: formatIPv6(buffer),
-            port: buffer.readUInt16BE(16),
-        };
-    }
-}
 
 
 // var socketQueue = new Queue();
@@ -705,6 +602,6 @@ server.on("connection", function (socket) {
         console.error("server error: %j", err);
     });
 
-var port = parseInt(1101, 10);
+var port = parseInt(PORT, 10);
 var host = process.env.HOST || "localhost";
 server.listen(port, host);
